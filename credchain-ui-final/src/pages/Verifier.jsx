@@ -86,57 +86,72 @@ export default function Verifier() {
   // ON-CHAIN VERIFICATION
   // -----------------------------
   async function verify() {
-    if (!vcHash) {
-      setResult('Compute the hash first.')
-      return
-    }
-
-    try {
-      setBusy(true)
-      setResult('Checking blockchain…')
-
-      const provider = new ethers.JsonRpcProvider(cfg.rpc)
-      const contract = new ethers.Contract(
-        cfg.registryAddress,
-        abiJson.abi,
-        provider
-      )
-
-      const parsed = JSON.parse(fileText)
-      const student = parsed.credentialSubject.id
-
-      const count = await contract.getCount(student)
-
-      let found = false
-
-      for (let i = 0; i < Number(count); i++) {
-        const [issuer, hash, cid, ts, revoked] =
-          await contract.getCred(student, i)
-
-        if (hash.toLowerCase() === vcHash.toLowerCase()) {
-          setResult(
-            [
-              `✅ MATCH FOUND`,
-              `Index: ${i}`,
-              `Issuer: ${issuer}`,
-              `CID: ${cid}`,
-              `IssuedAt: ${ts}`,
-              `Revoked: ${revoked}`,
-            ].join('\n')
-          )
-          found = true
-          break
-        }
-      }
-
-      if (!found) setResult('❌ No matching VC found on-chain.')
-
-    } catch (e) {
-      setResult('Error: ' + e.message)
-    } finally {
-      setBusy(false)
-    }
+  if (!vcHash) {
+    setResult("Compute the hash first.");
+    return;
   }
+
+  try {
+    setBusy(true);
+    setResult("Checking blockchain…");
+
+    const provider = new ethers.JsonRpcProvider(cfg.rpc);
+    const contract = new ethers.Contract(
+      cfg.registryAddress,
+      abiJson.abi,
+      provider
+    );
+
+    const parsed = JSON.parse(fileText);
+
+    // ----------------------------
+    // FIX: Safe student ID extraction
+    // ----------------------------
+    const student =
+      parsed?.credentialSubject?.id ||
+      parsed?.credentialSubject?.studentId ||
+      parsed?.credentialSubject?.rollNo ||
+      parsed?.studentId ||
+      null;
+
+    if (!student) {
+      setResult("Record does not exists..!!");
+      return;
+    }
+
+    const count = await contract.getCount(student);
+
+    let found = false;
+
+    for (let i = 0; i < Number(count); i++) {
+      const [issuer, hash, cid, ts, revoked] =
+        await contract.getCred(student, i);
+
+      if (hash.toLowerCase() === vcHash.toLowerCase()) {
+        setResult(
+          [
+            `✅ MATCH FOUND`,
+            `Index: ${i}`,
+            `Issuer: ${issuer}`,
+            `CID: ${cid}`,
+            `IssuedAt: ${ts}`,
+            `Revoked: ${revoked}`,
+          ].join("\n")
+        );
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      setResult("❌ No matching VC found on-chain.");
+    }
+  } catch (e) {
+    setResult("Error: " + e.message);
+  } finally {
+    setBusy(false);
+  }
+}
 
   return (
     <section>
