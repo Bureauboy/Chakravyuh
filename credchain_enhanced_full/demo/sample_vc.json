@@ -1,0 +1,17 @@
+{
+  "@context": ["https://www.w3.org/ns/credentials/v2"],
+  "type": ["VerifiableCredential", "DegreeCredential"],
+  "issuer": "did:web:university.example",
+  "issuanceDate": "2024-01-01T00:00:00Z",
+  "credentialSubject": {
+    "id": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "givenName": "Alice",
+    "familyName": "Johnson",
+    "degree": {
+      "name": "Bachelor of Science",
+      "major": "Computer Science",
+      "dateAwarded": "2024-06-01"
+    },
+    "gpa": 3.9
+  }
+}
