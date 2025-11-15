@@ -12,28 +12,69 @@ export default function Verifier() {
   const [result, setResult] = React.useState('')
   const [busy, setBusy] = React.useState(false)
 
+  // -----------------------------
+  // FILE UPLOAD HANDLER
+  // -----------------------------
   async function onFile(e) {
-    const f = e.target.files?.[0]
-    if (!f) return
-    setFileName(f.name)
-    const txt = await f.text()
-    setFileText(txt)
-    setResult('File loaded. Compute hash to continue.')
-  }
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  async function compute() {
-    if (!fileText) {
-      setResult('Please load a VC JSON file first.')
+    setFileName(file.name)
+    setResult('Processing file…')
+
+    // If PDF → send to server for conversion
+    if (file.type === 'application/pdf') {
+      try {
+        const form = new FormData()
+        form.append('pdf', file)
+
+        const resp = await axios.post(
+          cfg.issuerApi + '/api/pdf-to-json',
+          form,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        )
+
+        const jsonVC = resp.data.vc
+        setFileText(JSON.stringify(jsonVC, null, 2))
+        setResult('PDF converted → JSON extracted. Now compute hash.')
+
+      } catch (err) {
+        setResult('PDF conversion failed: ' + err.message)
+      }
       return
     }
+
+    // If JSON → load normally
+    try {
+      const txt = await file.text()
+      JSON.parse(txt) // Validate JSON
+      setFileText(txt)
+      setResult('JSON loaded. Click compute hash.')
+    } catch (err) {
+      setResult('Invalid JSON file.')
+    }
+  }
+
+  // -----------------------------
+  // HASH COMPUTE
+  // -----------------------------
+  async function compute() {
+    if (!fileText) {
+      setResult('Load a PDF or VC JSON first.')
+      return
+    }
+
     try {
       setBusy(true)
       setResult('Computing hash…')
+
       const resp = await axios.post(cfg.issuerApi + '/api/compute', {
         vc: JSON.parse(fileText),
       })
+
       setVcHash(resp.data.vcHash)
-      setResult('Hash computed. You can now verify on-chain.')
+      setResult('Hash computed → now verify on-chain.')
+
     } catch (e) {
       setResult('Error: ' + (e.response?.data?.error || e.message))
     } finally {
@@ -41,14 +82,18 @@ export default function Verifier() {
     }
   }
 
+  // -----------------------------
+  // ON-CHAIN VERIFICATION
+  // -----------------------------
   async function verify() {
     if (!vcHash) {
-      setResult('Compute the VC hash first.')
+      setResult('Compute the hash first.')
       return
     }
+
     try {
       setBusy(true)
-      setResult('Querying blockchain…')
+      setResult('Checking blockchain…')
 
       const provider = new ethers.JsonRpcProvider(cfg.rpc)
       const contract = new ethers.Contract(
@@ -59,21 +104,22 @@ export default function Verifier() {
 
       const parsed = JSON.parse(fileText)
       const student = parsed.credentialSubject.id
+
       const count = await contract.getCount(student)
 
       let found = false
+
       for (let i = 0; i < Number(count); i++) {
-        const [issuer, hash, cid, ts, revoked] = await contract.getCred(
-          student,
-          i
-        )
+        const [issuer, hash, cid, ts, revoked] =
+          await contract.getCred(student, i)
 
         if (hash.toLowerCase() === vcHash.toLowerCase()) {
           setResult(
             [
-              `✅ MATCH FOUND (index ${i})`,
+              `✅ MATCH FOUND`,
+              `Index: ${i}`,
               `Issuer: ${issuer}`,
-              `CID: ${cid || '(none)'}`,
+              `CID: ${cid}`,
               `IssuedAt: ${ts}`,
               `Revoked: ${revoked}`,
             ].join('\n')
@@ -83,9 +129,8 @@ export default function Verifier() {
         }
       }
 
-      if (!found) {
-        setResult('No matching credential found on-chain for this VC hash.')
-      }
+      if (!found) setResult('❌ No matching VC found on-chain.')
+
     } catch (e) {
       setResult('Error: ' + e.message)
     } finally {
@@ -100,26 +145,27 @@ export default function Verifier() {
           <div>
             <div className="card-title">Verifier</div>
             <div className="card-subtitle">
-              Upload a VC JSON, compute its hash, and check if it exists in the
-              registry.
+              Upload a PDF or VC JSON → convert → hash → verify on-chain.
             </div>
           </div>
         </div>
 
         <div className="section-stack">
+
+          {/* File Upload */}
           <div className="row" style={{ alignItems: 'center' }}>
             <div className="file-input-wrap">
               <div className="file-input-display">
-                {fileName || 'Choose VC JSON file'}
+                {fileName || 'Choose PDF or VC JSON'}
               </div>
-              <input type="file" accept=".json" onChange={onFile} />
+              <input
+                type="file"
+                accept=".json,application/pdf"
+                onChange={onFile}
+              />
             </div>
 
-            <button
-              className="btn btn-primary"
-              onClick={compute}
-              disabled={busy}
-            >
+            <button className="btn btn-primary" onClick={compute} disabled={busy}>
               {busy ? 'Working…' : 'Compute hash'}
             </button>
 
@@ -128,23 +174,22 @@ export default function Verifier() {
             </button>
           </div>
 
+          {/* Hash Display */}
           <div>
-            <p className="text-muted" style={{ marginBottom: 6 }}>
-              VC Hash
-            </p>
+            <p className="text-muted">VC Hash</p>
             <div className="pre-box">
-              {vcHash || 'VC hash will appear here after computing.'}
+              {vcHash || 'Hash will appear here.'}
             </div>
           </div>
 
+          {/* Result */}
           <div>
-            <p className="text-muted" style={{ marginBottom: 6 }}>
-              Verification result
-            </p>
+            <p className="text-muted">Verification result</p>
             <div className="pre-box">
-              {result || 'No verification attempted yet.'}
+              {result || 'Awaiting action…'}
             </div>
           </div>
+
         </div>
       </div>
     </section>
