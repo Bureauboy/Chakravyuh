@@ -1,99 +1,237 @@
-CredChain — On-Chain Academic Credential System
-Decentralized • Verifiable • Secure • Minimal Apple-style UI
+# Chakravyuh
 
-CredChain is a full-stack blockchain system that enables universities to issue tamper-proof academic credentials on-chain, students to manage their credentials, and verifiers to validate them instantly.
+[Short tagline / one-liner describing the project — replace this with a concise description]
 
-This project includes:
+Status: WIP / Beta / Stable (choose one)
 
-✔ On-chain Credential Registry (Solidity + Hardhat)
-✔ Issuer Portal (VC creation, canonical hashing, PDF → JSON extraction)
-✔ Verifier Portal (upload PDF/JSON → hash → on-chain verification)
-✔ Student Wallet View
-✔ React Frontend with Apple-minimalist UI
-✔ Canonical JSON hashing for Verifiable Credentials
-✔ Local Hardhat blockchain
-✔ Full end-to-end credential lifecycle
+---
 
-🚀 Features
-🔐 1. Blockchain Credential Registry
+Table of contents
+- [About](#about)
+- [Features](#features)
+- [Demo](#demo)
+- [Requirements](#requirements)
+- [Quickstart](#quickstart)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Architecture & Components](#architecture--components)
+- [Development](#development)
+- [Testing](#testing)
+- [CI / CD](#ci--cd)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+- [Contact](#contact)
 
-Smart contract stores:
+---
 
-student address
+## About
+Chakravyuh is a [brief description of what the project does — e.g., "scalable access control microservice", "CLI for X", "visualization tool for Y"].  
+Include the problem it solves and the intended audience.
 
-VC hash
+Example:
+> Chakravyuh provides a flexible policy engine and role-based access workflows for microservices, enabling teams to define and evaluate authorization policies in a simple, declarative way.
 
-CID (IPFS mock)
+## Features
+- Feature 1 — short explanation
+- Feature 2 — short explanation
+- Feature 3 — short explanation
+- Lightweight, pluggable architecture
+- Easy integration with [popular tech stack / databases / identity providers]
 
-timestamp
+## Demo
+If you have a demo or GIF, link it here or embed it:
+- Screenshot: `docs/screenshots/usage.png`
+- Demo: `https://your-demo-url.example`
 
-revocation flag
+## Requirements
+List OS / runtime / dependencies:
+- Node.js >= 18 (if applicable)
+- Python 3.10+ (if applicable)
+- Go 1.20+ (if applicable)
+- Docker (optional, for local development)
 
-Only authorized issuer can issue credentials.
+(Replace above with the actual requirements for Chakravyuh.)
 
-Immutable & verifiable on-chain.
+## Quickstart
 
-🏫 2. Issuer Portal
+Clone the repository:
+```bash
+git clone https://github.com/Bureauboy/Chakravyuh.git
+cd Chakravyuh
+```
 
-Load sample VC OR upload PDF
+Install dependencies (example — replace according to your stack):
 
-PDF → text → structured JSON VC
+Node:
+```bash
+npm install
+```
 
-Compute canonical JSON hash using:
+Python:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-keccak256( utf8Bytes( canonical(vcJson) ) )
+Go:
+```bash
+go mod download
+go build ./...
+```
 
+Start locally (example):
+```bash
+# Example for a service
+npm run start
+# or
+python -m chakravyuh
+# or
+./bin/chakravyuh serve
+```
 
-UI styled like Apple—minimal, clean, centered.
+## Configuration
+Explain configuration via env vars, config files, or CLI flags.
 
-🕵️‍♂️ 3. Verifier Portal
+Example environment variables:
+- CHAKRAVYUH_PORT — port the server listens on (default: 8080)
+- CHAKRAVYUH_DB_URL — database connection string
+- CHAKRAVYUH_LOG_LEVEL — logging level (info/debug)
 
-Upload PDF or VC JSON
+Provide a sample config file:
+```yaml
+# config.yml
+server:
+  port: 8080
+database:
+  url: postgresql://user:pass@localhost:5432/chakra
+```
 
-Convert → canonicalize → compute hash
+## Usage
+Give example workflows and commands.
 
-Fetch on-chain credentials
+API example:
+```bash
+# Check authorization
+curl -X POST http://localhost:8080/v1/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "principal": "alice",
+    "resource": "dataset:42",
+    "action": "read"
+  }'
+```
 
-Compare → show match/no match
+CLI example:
+```bash
+chakravyuh create-policy --name "read-dataset" --rule "allow if role == 'reader'"
+```
 
-🎓 4. Student Wallet
+## Architecture & Components
+Briefly describe the high-level architecture:
+- Policy Engine — evaluates policies expressed as...
+- API Service — HTTP endpoints for...
+- Storage — where policies, users and logs are persisted
+- CLI — admin tool for creating policies
+- Optional: integrations (Kafka, Redis, OIDC, etc.)
 
-View all issued credentials
+Include a diagram link if available (e.g., docs/architecture.png).
 
-Minimal UI with emphasis on clarity.
+## Development
 
-🛠️ Tech Stack
-Smart Contract
+Branching model:
+- main — stable releases
+- develop — active development
+- feature/* — feature branches
 
-Solidity 0.8.x
+Local development:
+```bash
+# Example: run in Docker Compose
+docker-compose up --build
+```
 
-Hardhat 2.27.x
+Code style and linting:
+- Use ESLint / Prettier (Node)
+- Use black / flake8 (Python)
+- Use gofmt / golangci-lint (Go)
 
-Ethers.js v6
+Common commands:
+```bash
+# Run linter
+npm run lint
 
-Backend
+# Run formatter
+npm run format
 
-Node.js / Express
+# Build
+npm run build
+```
 
-pdf-parse (PDF → Text)
+## Testing
+How to run the test suite:
+```bash
+# Unit tests
+npm test
+# or
+pytest
+# or
+go test ./...
+```
 
-Canonical JSON generator
+Test coverage:
+- Command to generate coverage report
+- Where reports are stored (e.g., coverage/)
 
-REST APIs:
+## CI / CD
+Explain CI status and pipeline steps (GitHub Actions, GitLab CI, etc.):
+- Run tests
+- Run linters
+- Build artifact
+- Deploy to staging/production
 
-/api/compute
+Include badge links if you have them:
+- [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
 
-/api/compute-from-pdf
+## Contributing
+We welcome contributions! Please follow these steps:
+1. Fork the repository
+2. Create a feature branch: git checkout -b feature/your-feature
+3. Commit your changes: git commit -m "Add a feature"
+4. Push to your fork: git push origin feature/your-feature
+5. Open a pull request describing your changes
 
-/api/pdf-to-json
+Please follow the code of conduct and sign the CLA if required.
 
-/api/sign
+Include links to:
+- CONTRIBUTING.md
+- CODE_OF_CONDUCT.md
+- ISSUE_TEMPLATE.md / PULL_REQUEST_TEMPLATE.md
 
-/api/pin
+## Roadmap
+Planned features and priorities:
+- v0.2 — stable policy language, plugin support
+- v1.0 — production-ready release, high-availability mode
+- Integrations with OAuth / OIDC providers
 
-Frontend
+## License
+Specify the project license (e.g., MIT, Apache-2.0). If not decided, add a placeholder.
 
-React + Vite
+This project is licensed under the [MIT License](LICENSE) — replace as needed.
 
-Custom minimal Apple-style UI (CSS)
+## Acknowledgements
+- List libraries, frameworks, or people who helped/inspired this project
 
+## Contact
+Maintainer: Bureauboy  
+Project: https://github.com/Bureauboy/Chakravyuh
+
+For questions, open an issue or email: your-email@example.com
+
+---
+
+If you want a tailored README, I can:
+- Inspect the repository and update the Quickstart, Requirements, and Usage sections with exact commands and examples.
+- Add badges for language breakdown, build status, coverage, package manager version, and license.
+- Commit the README to a branch and open a PR — tell me which branch name to use.
